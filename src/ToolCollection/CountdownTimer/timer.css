@@ -1,0 +1,12 @@
+/* For a simple timer-box styling, you can add this to your CSS file */
+/* Optional: You can further style the timer box if needed */
+.timer-box {
+    width: 100px;
+    height: 80px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #fff;
+    border-radius: 8px;
+  }
+  

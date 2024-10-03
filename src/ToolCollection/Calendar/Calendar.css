@@ -1,0 +1,41 @@
+.calendar-container {
+    max-width: 300px;
+    margin: 0 auto;
+    padding: 20px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px #afb4b9;
+  }
+  /* Center the input box */
+.input-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 50px 0 30px 0;
+
+  }
+  
+  /* Style for the input box */
+  .input-container input {
+    width: 300px; /* Set a width for the input */
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 10px; /* Adjusted radius */
+    background-color: white;
+    box-shadow: 0 4px 8px #afb4b9;
+    transition: all 0.3s ease; /* Smooth transition effect */
+}
+
+/* Hover effect */
+.input-container input:hover {
+    border-color: #007bff; /* Change border color on hover */
+    box-shadow: 0 6px 12px rgba(10, 100, 196, 0.5); /* Slightly larger shadow on hover */
+    background-color: #f8f9fa; /* Light gray background on hover */
+}
+
+  .text1{
+    text-align: center;
+    font-size: 20px;
+    font-family: cursive;
+  }
