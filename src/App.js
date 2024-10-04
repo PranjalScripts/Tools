@@ -2,7 +2,7 @@
 //  import Calendar from './ToolCollection/Calendar/Calendar'
 //  import TimerApp from './ToolCollection/CountdownTimer/timerApp';
 // import VoiceRecorder from './ToolCollection/voiceRecorder/voiceRecorder'
-import Randompassword from './ToolCollection/RandomPasswordGenerator/Randompassword.js';
+import Randompassword from './ToolCollection/RandomPasswordGenerator/Randompassword.jsx';
 import Login from "./ToolCollection/Pages/Component/login.js";
 import Logout from "./ToolCollection/Pages/Component/logout.js";
 import ProtectedRoute from "./ToolCollection/Pages/Component/protectedRoute.js";

@@ -14,6 +14,7 @@ function Logout() {
       console.error("Failed to log out: ", error);
     }
   };
+  
 
   return <button onClick={handleLogout}>Logout</button>;
 }

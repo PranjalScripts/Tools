@@ -23,18 +23,7 @@ function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-100">
       <div className="bg-white shadow-md rounded-lg p-8 max-w-md w-full space-y-6">
-        <div className="flex justify-between mb-4">
-          <Link to="/login">
-            <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md focus:outline-none focus:ring focus:ring-blue-500">
-              Login
-            </button>
-          </Link>
-          <Link to="/signup">
-            <button className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-md focus:outline-none focus:ring focus:ring-blue-500">
-              Sign Up
-            </button>
-          </Link>
-        </div>
+         
 
         <h2 className="text-2xl font-bold text-center">Login</h2>
 

@@ -4,13 +4,12 @@ import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
  
 const firebaseConfig = {
-  apiKey: "AIzaSyAWYAOvHHYLctuFK95U7q_CnG8O8ucGb48",
-  authDomain: "pizeonfly-e73fc.firebaseapp.com",
-  projectId: "pizeonfly-e73fc",
-  storageBucket: "pizeonfly-e73fc.appspot.com",
-  messagingSenderId: "833389843948",
-  appId: "1:833389843948:web:254f728d4dab0288f3dcc9",
-  measurementId: "G-PK45ZLMGC5",
+  apiKey: "AIzaSyCmxUKqdp1A5yd5uYDYCQDZIJA9uZLUwec",
+  authDomain: "passwordgenerator-322a1.firebaseapp.com",
+  projectId: "passwordgenerator-322a1",
+  storageBucket: "passwordgenerator-322a1.appspot.com",
+  messagingSenderId: "870311033263",
+  appId: "1:870311033263:web:c5620e6af3be293811575a",
 };
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
