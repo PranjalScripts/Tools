@@ -1,11 +1,19 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { db } from "../DB/Firebase"; // Import your Firestore configuration
-import { collection, addDoc, getDocs, serverTimestamp } from "firebase/firestore"; // Firestore functions
+import { db } from "../DB/Firebase";
+import {
+  collection,
+  addDoc,
+  getDocs,
+  serverTimestamp,
+  query,
+  where,
+  doc,
+  deleteDoc,
+} from "firebase/firestore";
 import "./RandomPassword.css";
-import useAuth from "../Pages/Auth/auth.js"; // Import useAuth hook
-import { useNavigate } from "react-router-dom"; // useNavigate replaces useHistory in react-router-dom v6
-import PasswordDisplay from "./PasswordDisplay"; // Import PasswordDisplay component
-import { query, where } from "firebase/firestore";
+import useAuth from "../Pages/Auth/auth.js";
+import { useNavigate } from "react-router-dom";
+import PasswordDisplay from "./PasswordDisplay";
 
 function Randompassword() {
   const [length, setLength] = useState(12);
@@ -13,20 +21,21 @@ function Randompassword() {
   const [char, setChar] = useState(true);
   const [password, setPassword] = useState("");
   const [purpose, setPurpose] = useState("");
-  const [username, setUsername] = useState(""); // New optional username state
+  const [username, setUsername] = useState("");
   const [passwordList, setPasswordList] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [showPasswordList, setShowPasswordList] = useState(false); // New state to toggle password display
+  const [showPasswordList, setShowPasswordList] = useState(false);
 
   const { user: currentUser, logout } = useAuth();
   const navigate = useNavigate();
+  const passwordRef = useRef(null);
 
   const PasswordGenerator = useCallback(() => {
     let pass = "";
-    let lower = "abcdefghijklmnopqrstuvwxyz";
-    let upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    let num = "0123456789";
-    let sym = "!@#$%^&*(){}`~_-=+/|,.<>";
+    const lower = "abcdefghijklmnopqrstuvwxyz";
+    const upper = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    const num = "0123456789";
+    const sym = "!@#$%^&*(){}`~_-=+/|,.<>";
 
     if (numbers) pass += num.charAt(Math.floor(Math.random() * num.length));
     if (lower) pass += lower.charAt(Math.floor(Math.random() * lower.length));
@@ -54,7 +63,6 @@ function Randompassword() {
     PasswordGenerator();
   }, [length, numbers, char, PasswordGenerator]);
 
-  const passwordRef = useRef(null);
   const copyPassMethod = useCallback(() => {
     passwordRef.current?.select();
     window.navigator.clipboard.writeText(password);
@@ -66,19 +74,19 @@ function Randompassword() {
         purpose,
         password,
         uid: currentUser.uid,
-        username: username || null, // Add username if provided, else null
+        username: username || null,
       };
 
       setPasswordList((prevList) => [...prevList, newPasswordEntry]);
       setPurpose("");
-      setUsername(""); // Reset username after adding
+      setUsername("");
       PasswordGenerator();
+
       try {
-        const docRef = await addDoc(collection(db, "passwords"), {
+        await addDoc(collection(db, "passwords"), {
           ...newPasswordEntry,
           createdAt: serverTimestamp(),
         });
-        console.log("Password added to Firestore with ID: ", docRef.id);
       } catch (error) {
         console.error("Error adding password: ", error);
       }
@@ -99,7 +107,10 @@ function Randompassword() {
   const fetchPasswords = async () => {
     if (currentUser) {
       try {
-        const q = query(collection(db, "passwords"), where("uid", "==", currentUser.uid));
+        const q = query(
+          collection(db, "passwords"),
+          where("uid", "==", currentUser.uid)
+        );
         const querySnapshot = await getDocs(q);
         const fetchedPasswords = [];
         querySnapshot.forEach((doc) => {
@@ -120,17 +131,18 @@ function Randompassword() {
     fetchPasswords();
   }, [currentUser]);
 
-  const refreshPassword = () => {
-    setPurpose("");
-    PasswordGenerator();
-  };
-
-  const handleDelete = (id) => {
-    setPasswordList((prevList) => prevList.filter((password) => password.id !== id));
+  const handleDelete = async (id) => {
+    try {
+      await deleteDoc(doc(db, "passwords", id));
+      setPasswordList((prevList) => prevList.filter((password) => password.id !== id));
+      console.log(`Password with ID ${id} deleted successfully.`);
+    } catch (error) {
+      console.error("Error deleting password: ", error);
+    }
   };
 
   return (
-    <div className="flex flex-col md:flex-row items-start w-full h-auto p-4 md:p-10">
+    <div className="flex flex-col items-center justify-center w-full h-screen p-4">
       <div className="mt-5 w-full max-w-md bg-gray-800 p-5 rounded-md">
         <div className="flex justify-end mb-4">
           <button
@@ -140,15 +152,14 @@ function Randompassword() {
             Logout
           </button>
         </div>
-        <form className="w-full ">
-          {/* Username input (optional) */}
+        <form className="w-full">
           <div className="mb-4">
             <input
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
               placeholder="Username (optional)"
-              className="w-full rounded-md border border-grey/50 bg-white px-3 py-2 text-[1rem] placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-black/50"
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-black/50"
             />
           </div>
           <div className="mb-4">
@@ -157,12 +168,12 @@ function Randompassword() {
               value={purpose}
               onChange={(e) => setPurpose(e.target.value)}
               placeholder="Create password for..."
-              className="w-full rounded-md border border-grey/50 bg-white px-3 py-2 text-[1rem] placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-black/50"
+              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-black/50"
             />
           </div>
           <div className="flex w-full gap-2 justify-between items-center">
             <input
-              className="flex h-10 w-full rounded-md border border-grey/50 bg-white text-indigo-600 px-3 py-2 text-[1.35rem] font-medium font-sans placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-black/50 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex h-10 w-full rounded-md border border-gray-300 bg-white text-indigo-600 px-3 py-2 text-lg font-medium placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-black/50 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
               type="text"
               value={password}
               placeholder="Password"
@@ -186,6 +197,7 @@ function Randompassword() {
                 max={50}
                 defaultValue={length}
                 onChange={(e) => setLength(e.target.value)}
+                className="w-full"
               />
               <label htmlFor="length" className="text-green-600 text-lg ml-2">
                 Length: {length}
@@ -215,7 +227,7 @@ function Randompassword() {
             </div>
           </div>
 
-          <div className="mt-4 flex justify-between">
+          <div className="mt-4 flex flex-col md:flex-row justify-between">
             <button
               type="button"
               onClick={addToPasswordList}
@@ -226,8 +238,8 @@ function Randompassword() {
 
             <button
               type="button"
-              onClick={() => setShowPasswordList(!showPasswordList)} // Toggle password display
-              className="flex rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
+              onClick={() => setShowPasswordList(!showPasswordList)}
+              className="flex mt-2 md:mt-0 rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
             >
               {showPasswordList ? "Hide Passwords" : "Show Passwords"}
             </button>
@@ -235,12 +247,11 @@ function Randompassword() {
         </form>
       </div>
 
-      {/* Conditional rendering of password list */}
+      {/* Display passwords if the list is being shown */}
       {showPasswordList && (
-        <PasswordDisplay
-          passwordList={passwordList}
-          handleDelete={handleDelete}
-        />
+        <div className="password-list">
+          <PasswordDisplay passwordList={passwordList} onDelete={handleDelete} />
+        </div>
       )}
     </div>
   );
