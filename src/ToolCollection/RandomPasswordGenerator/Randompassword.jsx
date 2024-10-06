@@ -10,7 +10,6 @@ import {
   doc,
   deleteDoc,
 } from "firebase/firestore";
-import "./RandomPassword.css";
 import useAuth from "../Pages/Auth/auth.js";
 import { useNavigate } from "react-router-dom";
 import PasswordDisplay from "./PasswordDisplay";
@@ -72,23 +71,26 @@ function Randompassword() {
     if (purpose && password && currentUser) {
       const newPasswordEntry = {
         purpose,
-        password,
+        password, // Store the plain password
         uid: currentUser.uid,
         username: username || null,
       };
 
+      // Update passwordList to include original password for display
       setPasswordList((prevList) => [...prevList, newPasswordEntry]);
       setPurpose("");
       setUsername("");
       PasswordGenerator();
 
       try {
+        // Save the new password entry to Firestore
         await addDoc(collection(db, "passwords"), {
           ...newPasswordEntry,
           createdAt: serverTimestamp(),
         });
+        console.log("Password stored successfully:", newPasswordEntry);
       } catch (error) {
-        console.error("Error adding password: ", error);
+        console.error("Error adding password to Firestore: ", error);
       }
     } else {
       console.error("Purpose, password, or user is missing.");
@@ -114,7 +116,11 @@ function Randompassword() {
         const querySnapshot = await getDocs(q);
         const fetchedPasswords = [];
         querySnapshot.forEach((doc) => {
-          fetchedPasswords.push({ id: doc.id, ...doc.data() });
+          const passwordData = doc.data();
+          fetchedPasswords.push({
+            id: doc.id,
+            ...passwordData,
+          });
         });
         setPasswordList(fetchedPasswords);
         setLoading(false);
@@ -143,113 +149,114 @@ function Randompassword() {
 
   return (
     <div className="flex flex-col items-center justify-center w-full h-screen p-4">
-      <div className="mt-5 w-full max-w-md bg-gray-800 p-5 rounded-md">
-        <div className="flex justify-end mb-4">
-          <button
-            onClick={handleLogout}
-            className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
-          >
-            Logout
-          </button>
+      {/* Random password generator box with scroll only on mobile */}
+      <div className="mt-5 w-full max-w-md bg-gray-800 p-5 rounded-md overflow-hidden">
+        <div className="overflow-y-auto max-h-64 md:max-h-none"> {/* Scroll only on mobile */}
+          <div className="flex justify-end mb-4">
+            <button
+              onClick={handleLogout}
+              className="bg-red-500 text-white px-4 py-2 rounded-md hover:bg-green-600"
+            >
+              Logout
+            </button>
+          </div>
+          <form className="w-full">
+            <div className="mb-4">
+              <input
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="Username (optional)"
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-black/50"
+              />
+            </div>
+            <div className="mb-4">
+              <input
+                type="text"
+                value={purpose}
+                onChange={(e) => setPurpose(e.target.value)}
+                placeholder="Create password for..."
+                className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-black/50"
+              />
+            </div>
+            <div className="flex w-full gap-2 justify-between items-center mb-4">
+              <input
+                className="flex h-10 w-full rounded-md border border-gray-300 bg-white text-indigo-600 px-3 py-2 text-lg font-medium placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-black/50 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
+                type="text"
+                value={password}
+                placeholder="Password"
+                readOnly
+                ref={passwordRef}
+              />
+              <button
+                type="button"
+                onClick={copyPassMethod}
+                className="rounded-md bg-black px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
+              >
+                Copy
+              </button>
+            </div>
+            <div className="mt-8 flex flex-col md:flex-row justify-between items-center w-full gap-4">
+              <div className="flex items-center w-full md:w-auto">
+                <input
+                  type="range"
+                  min={12}
+                  max={50}
+                  defaultValue={length}
+                  onChange={(e) => setLength(e.target.value)}
+                  className="w-full"
+                />
+                <label htmlFor="length" className="text-green-600 text-lg ml-2">
+                  Length: {length}
+                </label>
+              </div>
+              <div className="flex items-center mt-2 md:mt-0">
+                <input
+                  type="checkbox"
+                  checked={numbers}
+                  className="mr-2"
+                  onChange={() => setNumbers((prev) => !prev)}
+                />
+                <label htmlFor="checkbox" className="text-green-600 text-lg">
+                  Numbers
+                </label>
+              </div>
+              <div className="flex items-center mt-2 md:mt-0">
+                <input
+                  type="checkbox"
+                  checked={char}
+                  className="mr-2"
+                  onChange={() => setChar((prev) => !prev)}
+                />
+                <label htmlFor="Characters" className="text-green-600 text-lg">
+                  Special Characters
+                </label>
+              </div>
+            </div>
+
+            <div className="mt-4 flex flex-col md:flex-row justify-between">
+              <button
+                type="button"
+                onClick={addToPasswordList}
+                className="flex rounded-lg bg-black px-4 py-2 font-semibold text-white hover:bg-black/80 hover:bg-gray-900"
+              >
+                Save Password
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setShowPasswordList(!showPasswordList)}
+                className="flex mt-2 md:mt-0 rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
+              >
+                {showPasswordList ? "Hide Passwords" : "Show Passwords"}
+              </button>
+            </div>
+          </form>
         </div>
-        <form className="w-full">
-          <div className="mb-4">
-            <input
-              type="text"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="Username (optional)"
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-black/50"
-            />
-          </div>
-          <div className="mb-4">
-            <input
-              type="text"
-              value={purpose}
-              onChange={(e) => setPurpose(e.target.value)}
-              placeholder="Create password for..."
-              className="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-black/50"
-            />
-          </div>
-          <div className="flex w-full gap-2 justify-between items-center">
-            <input
-              className="flex h-10 w-full rounded-md border border-gray-300 bg-white text-indigo-600 px-3 py-2 text-lg font-medium placeholder:text-gray-400 focus:outline-none focus:ring-1 focus:ring-black/50 focus:ring-offset-1 disabled:cursor-not-allowed disabled:opacity-50"
-              type="text"
-              value={password}
-              placeholder="Password"
-              readOnly
-              ref={passwordRef}
-            />
-            <button
-              type="button"
-              onClick={copyPassMethod}
-              className="rounded-md bg-black px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-black/80 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-black"
-            >
-              Copy
-            </button>
-          </div>
-
-          <div className="mt-8 flex flex-col md:flex-row justify-between items-center w-full">
-            <div className="flex items-center w-full md:w-auto">
-              <input
-                type="range"
-                min={12}
-                max={50}
-                defaultValue={length}
-                onChange={(e) => setLength(e.target.value)}
-                className="w-full"
-              />
-              <label htmlFor="length" className="text-green-600 text-lg ml-2">
-                Length: {length}
-              </label>
-            </div>
-            <div className="flex items-center mt-2 md:mt-0">
-              <input
-                type="checkbox"
-                checked={numbers}
-                className="mr-2"
-                onChange={() => setNumbers((prev) => !prev)}
-              />
-              <label htmlFor="checkbox" className="text-green-600 text-lg">
-                Numbers
-              </label>
-            </div>
-            <div className="flex items-center mt-2 md:mt-0">
-              <input
-                type="checkbox"
-                checked={char}
-                className="mr-2"
-                onChange={() => setChar((prev) => !prev)}
-              />
-              <label htmlFor="Characters" className="text-green-600 text-lg">
-                Special Characters
-              </label>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-col md:flex-row justify-between">
-            <button
-              type="button"
-              onClick={addToPasswordList}
-              className="flex rounded-lg bg-black px-4 py-2 font-semibold text-white hover:bg-black/80 hover:bg-gray-900"
-            >
-              Save Password
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setShowPasswordList(!showPasswordList)}
-              className="flex mt-2 md:mt-0 rounded-lg bg-green-600 px-4 py-2 font-semibold text-white hover:bg-green-700"
-            >
-              {showPasswordList ? "Hide Passwords" : "Show Passwords"}
-            </button>
-          </div>
-        </form>
       </div>
 
-      {/* Display passwords if the list is being shown */}
       {showPasswordList && (
-        <div className="password-list">
+        <div className="password-list w-full overflow-x-auto"> {/* Horizontal scroll for password list */}
           <PasswordDisplay passwordList={passwordList} onDelete={handleDelete} />
         </div>
       )}

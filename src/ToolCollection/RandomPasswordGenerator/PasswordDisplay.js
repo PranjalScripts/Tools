@@ -5,6 +5,7 @@ import { db } from "../DB/Firebase"; // Import Firestore configuration
 function PasswordDisplay({ passwordList, onDelete }) {
   const [currentPage, setCurrentPage] = useState(1);
   const [copyMessage, setCopyMessage] = useState("");
+  const [deleteMessage, setDeleteMessage] = useState(""); // State for delete indication
   const itemsPerPage = 5;
 
   // Sort passwords by createdAt in descending order
@@ -33,6 +34,8 @@ function PasswordDisplay({ passwordList, onDelete }) {
     try {
       await deleteDoc(doc(db, "passwords", id)); // Delete from Firestore
       onDelete(id); // Call onDelete to update the UI
+      setDeleteMessage("Password deleted successfully!"); // Set delete indication message
+      setTimeout(() => setDeleteMessage(""), 2000); // Clear message after 2 seconds
     } catch (error) {
       console.error("Error deleting password: ", error);
     }
@@ -40,15 +43,35 @@ function PasswordDisplay({ passwordList, onDelete }) {
 
   // Handle password copy to clipboard
   const copyToClipboard = (password) => {
-    navigator.clipboard
-      .writeText(password)
-      .then(() => {
+    if (navigator.clipboard) {
+      navigator.clipboard
+        .writeText(password)
+        .then(() => {
+          setCopyMessage("Password copied!"); // Set success message
+          setTimeout(() => setCopyMessage(""), 2000); // Clear message after 2 seconds
+        })
+        .catch((error) => {
+          console.error("Failed to copy password: ", error);
+          setCopyMessage("Failed to copy password."); // Set failure message
+          setTimeout(() => setCopyMessage(""), 2000); // Clear message after 2 seconds
+        });
+    } else {
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea");
+      textArea.value = password;
+      document.body.appendChild(textArea);
+      textArea.select();
+      try {
+        document.execCommand("copy");
         setCopyMessage("Password copied!"); // Set success message
         setTimeout(() => setCopyMessage(""), 2000); // Clear message after 2 seconds
-      })
-      .catch((error) => {
-        console.error("Failed to copy password: ", error);
-      });
+      } catch (error) {
+        console.error("Failed to copy password using fallback: ", error);
+        setCopyMessage("Failed to copy password."); // Set failure message
+        setTimeout(() => setCopyMessage(""), 2000); // Clear message after 2 seconds
+      }
+      document.body.removeChild(textArea); // Clean up
+    }
   };
 
   return (
@@ -57,9 +80,11 @@ function PasswordDisplay({ passwordList, onDelete }) {
         Stored Passwords:
       </h3>
       {copyMessage && <p className="text-green-500">{copyMessage}</p>}
+      {deleteMessage && <p className="text-red-500">{deleteMessage}</p>}{" "}
+      {/* Delete indication message */}
       {currentPasswords.length > 0 ? (
         <>
-          <div className="overflow-x-auto"> {/* Enable horizontal scrolling */}
+          <div className="overflow-x-auto overflow-y-auto max-h-96">
             <table className="min-w-full bg-gray-800 border border-gray-600">
               <thead>
                 <tr>
